@@ -94,7 +94,11 @@ export default function EditProfile() {
                                 <RiUpload2Line className="text-white" size={20} />
                             </span>
                             {previewUrl ? (
-                                <img src={previewUrl} alt="pic" className="w-32 h-32 rounded-full object-cover" />
+                                <img
+                                    src={previewUrl}
+                                    alt="pic"
+                                    className="w-32 h-32 rounded-full object-contain border"
+                                />
                             ) : (
                                 <div className="">
                                     <span className="">

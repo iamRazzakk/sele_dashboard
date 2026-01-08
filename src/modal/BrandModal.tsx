@@ -108,6 +108,7 @@ const AddEditBrandModal = ({ isOpen, onClose, data }: AddEditBrandModalProps) =>
                                     type="file"
                                     name="file"
                                     id="file"
+                                    multiple
                                     accept="image/jpeg,image/png"
                                     onChange={handleImageChange}
                                     style={{ display: 'none' }}
