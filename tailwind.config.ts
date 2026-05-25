@@ -10,6 +10,7 @@ export default {
                 icon: '#3395FF',
                 // primaryText: '#1F1F1F',
 
+                // 
                 // stoke: '#00369A',
             },
             backgroundColor: {
