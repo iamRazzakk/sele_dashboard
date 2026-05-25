@@ -12,6 +12,8 @@ export default function RequestApproval() {
     const pageSize = 8;
     const [details, setDetails] = useState<any | null>(null);
 
+    console.log('approval data', data);
+
     return (
         <>
             <div className="rounded-lg mt-2 ">
@@ -80,9 +82,15 @@ export default function RequestApproval() {
                             key="status"
                             className="text-center"
                             render={(_, record) => (
-                                <div className="flex items-center justify-center font-semibold ">
+                                <div className="flex items-center justify-center font-semibold">
                                     <span className="text-nowrap bg-[#F17600] rounded-2xl text-white py-1 px-3">
-                                        {record.adminApproval == false && 'Pending'}
+                                        {record?.adminApproval === true && record?.isReject === true
+                                            ? 'Pending'
+                                            : record?.isReject === true
+                                              ? 'Rejected'
+                                              : record?.adminApproval === true
+                                                ? 'Approved'
+                                                : 'Pending'}
                                     </span>
                                 </div>
                             )}

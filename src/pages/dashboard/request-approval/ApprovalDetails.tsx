@@ -25,7 +25,7 @@ interface UserDetailsModalProps {
 
 const ApprovalDetails: React.FC<UserDetailsModalProps> = ({ isOpen, onClose, data }) => {
     const [updateApproval] = useUpdateApprovalMutation();
-    const [unApprovalUpdate] = useUnApprovalUpdateMutation();
+    const [unApprovalUpdate] = useUpdateApprovalMutation();
     // Check if data is available to avoid rendering issues
     if (!data) {
         return null; // Or show a fallback message
@@ -41,6 +41,7 @@ const ApprovalDetails: React.FC<UserDetailsModalProps> = ({ isOpen, onClose, dat
     const handleApprove = async (id: string) => {
         const data = {
             adminApproval: true,
+            isRejected: false,
         };
         try {
             const res = await updateApproval({ id, data }).unwrap();
@@ -55,23 +56,30 @@ const ApprovalDetails: React.FC<UserDetailsModalProps> = ({ isOpen, onClose, dat
     };
 
     // handle delete
-    const handleuUpdate = (id: string) => {
+    const handleUnApproval = (id: string) => {
+        const data = {
+            adminApproval: false,
+            isRejected: true,
+        };
+
         Swal.fire({
             title: 'Are you sure?',
-            text: 'You want to be reject this user!',
+            text: 'You want to reject this user!',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
             confirmButtonText: 'Yes, Reject it',
-        }).then((result) => {
+        }).then(async (result) => {
             if (result.isConfirmed) {
-                unApprovalUpdate(id);
-                Swal.fire({
-                    title: 'Reject!',
-                    text: `User item reject`,
-                    icon: 'success',
-                });
+                try {
+                    const res = await unApprovalUpdate({
+                        id,
+                        data,
+                    }).unwrap();
+
+                    toast.success(res?.message || 'User rejected');
+                } catch (err: any) {
+                    toast.error(err?.message || 'Reject failed');
+                }
             }
         });
     };
@@ -146,7 +154,7 @@ const ApprovalDetails: React.FC<UserDetailsModalProps> = ({ isOpen, onClose, dat
                 <div className="flex justify-end gap-6 mt-8">
                     <button
                         className=" text-white py-2 px-4 bg-red-600 p-2 rounded-md w-32"
-                        onClick={() => handleuUpdate(data?._id)}
+                        onClick={() => handleUnApproval(data?._id)}
                     >
                         Reject
                     </button>
