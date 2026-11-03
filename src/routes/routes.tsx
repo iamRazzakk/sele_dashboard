@@ -31,6 +31,7 @@ import RequestApproval from '../pages/dashboard/request-approval/RequestApproval
 import PaymentFailed from '../payment/PaymentFailed';
 import PrivateRoute from './PrivateRoute/PrivateRoute';
 import AccountCreateFailed from '../payment/AccountCreateFailed';
+import MarketplaceFees from '../pages/dashboard/marketplace-fees/MarketplaceFees';
 
 const router = createBrowserRouter([
     {
@@ -60,6 +61,7 @@ const router = createBrowserRouter([
             { path: '/profile', element: <Profile /> },
             { path: '/edit-profile', element: <EditProfile /> },
             { path: '/change-password', element: <ChangePassword /> },
+            { path: '/marketplace-fees', element: <MarketplaceFees /> },
         ],
     },
     { path: '/login', element: <Login /> },

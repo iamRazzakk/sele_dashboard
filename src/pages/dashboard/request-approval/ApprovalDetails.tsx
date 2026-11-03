@@ -1,173 +1,129 @@
-import React from 'react';
+import { Button, Image } from 'antd';
+import { useState } from 'react';
 import Modal from '../../../modal/Modal';
-import {
-    useUnApprovalUpdateMutation,
-    useUpdateApprovalMutation,
-} from '../../../redux/apiSlice/approvalRequest/approval';
-import toast from 'react-hot-toast';
 import { imgUrl } from '../../../redux/api/baseApi';
-import Swal from 'sweetalert2';
+import { ApprovalUser } from '../../../redux/apiSlice/approvalRequest/approval';
 
-interface UserDetailsModalProps {
+interface ApprovalDetailsProps {
     isOpen: boolean;
     onClose: () => void;
-    data: {
-        _id: string;
-        image: string;
-        name: string;
-        email: string;
-        location: string;
-        createdAt: string;
-        drivingLicense: string | string[];
-        yourID: string | string[];
-    };
+    data: ApprovalUser;
+    isRejectedTab: boolean;
+    action?: 'approve' | 'reject';
+    onApprove: (user: ApprovalUser) => void;
+    onReject: (user: ApprovalUser) => void;
 }
 
-const ApprovalDetails: React.FC<UserDetailsModalProps> = ({ isOpen, onClose, data }) => {
-    const [updateApproval] = useUpdateApprovalMutation();
-    const [unApprovalUpdate] = useUpdateApprovalMutation();
-    // Check if data is available to avoid rendering issues
-    if (!data) {
-        return null; // Or show a fallback message
+const resolveUrl = (value?: string) => {
+    if (!value) return '';
+    return /^https?:\/\//i.test(value) ? value : `${imgUrl}${value.startsWith('/') ? '' : '/'}${value}`;
+};
+
+const isImageFile = (url: string) => {
+    const cleanUrl = url.split('?')[0].toLowerCase();
+    return !cleanUrl.includes('.') || /\.(avif|gif|jpe?g|png|svg|webp)$/.test(cleanUrl);
+};
+
+function PreviewImage({ src, alt, profile = false }: { src: string; alt: string; profile?: boolean }) {
+    const [hasError, setHasError] = useState(false);
+
+    if (!src || hasError) {
+        return (
+            <div
+                className={`flex items-center justify-center rounded border bg-white text-center text-xs text-gray-400 ${profile ? 'h-32 w-32 rounded-full' : 'h-36 w-full'}`}
+            >
+                No image found
+            </div>
+        );
     }
 
-    const agencyDetails = [
-        { label: 'User name', value: data?.name },
-        { label: 'Email', value: data?.email },
-        { label: 'Address', value: data?.location },
-        { label: 'Joining Date', value: data?.createdAt?.slice(0, 10) },
-    ];
+    return (
+        <Image
+            src={src}
+            alt={alt}
+            width={profile ? 128 : undefined}
+            height={profile ? 128 : undefined}
+            className={profile ? 'rounded-full object-cover' : 'h-36 rounded border object-cover'}
+            onError={() => setHasError(true)}
+        />
+    );
+}
 
-    const handleApprove = async (id: string) => {
-        const data = {
-            adminApproval: true,
-            isRejected: false,
-        };
-        try {
-            const res = await updateApproval({ id, data }).unwrap();
-            if (res?.message) {
-                toast.success(res.message);
-            } else {
-                toast.error(res.message || 'user not approved');
-            }
-        } catch (err: any) {
-            toast.error(err?.message || 'An error occurred while approving the user.');
-        }
-    };
+function Documents({ label, files = [] }: { label: string; files?: string[] }) {
+    return (
+        <section className="mt-5">
+            <h3 className="mb-2 font-semibold">{label}</h3>
+            {files.length === 0 ? (
+                <p className="text-sm text-gray-500">No documents provided</p>
+            ) : (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {files.map((file, index) => {
+                        const url = resolveUrl(file);
+                        return isImageFile(url) ? (
+                            <PreviewImage
+                                key={`${file}-${index}`}
+                                src={url}
+                                alt={`${label} ${index + 1}`}
+                            />
+                        ) : (
+                            <a
+                                key={`${file}-${index}`}
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex h-20 items-center justify-center rounded border bg-white font-medium text-blue-600"
+                            >
+                                Open document {index + 1}
+                            </a>
+                        );
+                    })}
+                </div>
+            )}
+        </section>
+    );
+}
 
-    // handle delete
-    const handleUnApproval = (id: string) => {
-        const data = {
-            adminApproval: false,
-            isRejected: true,
-        };
-
-        Swal.fire({
-            title: 'Are you sure?',
-            text: 'You want to reject this user!',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, Reject it',
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                try {
-                    const res = await unApprovalUpdate({
-                        id,
-                        data,
-                    }).unwrap();
-
-                    toast.success(res?.message || 'User rejected');
-                } catch (err: any) {
-                    toast.error(err?.message || 'Reject failed');
-                }
-            }
-        });
-    };
-
+export default function ApprovalDetails({
+    isOpen,
+    onClose,
+    data,
+    isRejectedTab,
+    action,
+    onApprove,
+    onReject,
+}: ApprovalDetailsProps) {
     return (
         <Modal isOpen={isOpen} onClose={onClose}>
-            <div className="bg-[#E6F2FF] p-5 rounded-lg">
-                <h2 className="text-2xl font-semibold mb-4">User Details</h2>
-                <div className="space-y-2 mt-6">
-                    <section className="flex gap-6 mb-4 ">
-                        <div className="border rounded">
-                            {/* <span>User Image :</span> */}
-                            <img
-                                src={data?.image}
-                                alt={data?.name}
-                                className="w-40 object-cover h-40 rounded-full mt-4"
-                            />
-                        </div>
-
-                        <div className="space-y-2 mt-">
-                            {agencyDetails?.map((detail, index) => (
-                                <div key={index} className="flex gap-5">
-                                    <strong>{detail.label} : </strong>
-                                    <p className="text-start">{detail.value}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-
-                    <section className="">
-                        <span className="">Driving License:</span>
-                        <div className="grid grid-cols-2 gap-3 mt-3">
-                            {Array.isArray(data?.drivingLicense) && data?.drivingLicense.length > 0
-                                ? data?.drivingLicense?.map((item: any, index: number) => {
-                                      const imageUrl = item.startsWith('https') ? item : `${imgUrl}${item}`;
-                                      return (
-                                          <a key={index} href={imageUrl} target="_blank" rel="noopener noreferrer">
-                                              <img
-                                                  src={imageUrl}
-                                                  alt={`Driving License ${index + 1}`}
-                                                  className="border rounded w-full h-40 object-cover"
-                                              />
-                                          </a>
-                                      );
-                                  })
-                                : 'No License'}
-                        </div>
-                    </section>
-
-                    <section className="pt-4">
-                        <span className="my-2">ID Card:</span>
-                        <div className="grid grid-cols-2 gap-3 mt-3">
-                            {Array.isArray(data?.yourID) && data?.yourID.length > 0
-                                ? data.yourID?.map((item: any, index: number) => {
-                                      const imageUrl = item.startsWith('https') ? item : `${imgUrl}${item}`;
-                                      return (
-                                          <a key={index} href={imageUrl} target="_blank" rel="noopener noreferrer">
-                                              <img
-                                                  key={index}
-                                                  src={imageUrl}
-                                                  alt={`Driving License ${index + 1}`}
-                                                  className="border rounded w-full h-40 object-cover mt-1"
-                                              />
-                                          </a>
-                                      );
-                                  })
-                                : 'No License'}
-                        </div>
-                    </section>
-                </div>
-
-                <div className="flex justify-end gap-6 mt-8">
-                    <button
-                        className=" text-white py-2 px-4 bg-red-600 p-2 rounded-md w-32"
-                        onClick={() => handleUnApproval(data?._id)}
-                    >
-                        Reject
-                    </button>
-                    <button
-                        className=" text-white py-2 px-4 bg-primary p-2 rounded-md w-32"
-                        onClick={() => handleApprove(data?._id)}
-                    >
-                        Approved
-                    </button>
+            <div className="max-h-[90vh] w-[min(92vw,720px)] overflow-y-auto rounded-lg bg-[#E6F2FF] p-5 sm:p-7">
+                <h2 className="mb-5 text-2xl font-semibold">User Details</h2>
+                <section className="flex flex-col gap-5 sm:flex-row">
+                    <PreviewImage
+                        src={resolveUrl(data.image)}
+                        alt={data.name || 'User'}
+                        profile
+                    />
+                    <dl className="grid flex-1 grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm sm:text-base">
+                        <dt className="font-semibold">Name:</dt><dd>{data.name || 'N/A'}</dd>
+                        <dt className="font-semibold">Email:</dt><dd className="break-all">{data.email || 'N/A'}</dd>
+                        <dt className="font-semibold">Location:</dt><dd>{data.location || 'N/A'}</dd>
+                        <dt className="font-semibold">Registered:</dt>
+                        <dd>{data.createdAt ? new Date(data.createdAt).toLocaleDateString() : 'N/A'}</dd>
+                        <dt className="font-semibold">Email verified:</dt><dd>{data.verified ? 'Yes' : 'No'}</dd>
+                    </dl>
+                </section>
+                <Documents label="Driving licence" files={data.drivingLicense} />
+                <Documents label="Identity documents" files={data.yourID} />
+                <div className="mt-7 flex flex-wrap justify-end gap-3">
+                    {!isRejectedTab && (
+                        <Button danger disabled={Boolean(action)} loading={action === 'reject'} onClick={() => onReject(data)}>
+                            Reject User
+                        </Button>
+                    )}
+                    <Button type="primary" disabled={Boolean(action)} loading={action === 'approve'} onClick={() => onApprove(data)}>
+                        Approve User
+                    </Button>
                 </div>
             </div>
         </Modal>
     );
-};
-
-export default ApprovalDetails;
+}

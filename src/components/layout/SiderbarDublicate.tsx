@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { IoSettingsOutline } from 'react-icons/io5';
+import { IoPricetagOutline, IoSettingsOutline } from 'react-icons/io5';
 import { LuLayoutDashboard } from 'react-icons/lu';
 import user from '../../../public/sidebar-icon/user.svg';
 import earings from '../../../public/sidebar-icon/earings.svg';
@@ -25,7 +25,7 @@ const menuItems = [
     { label: 'Brand', path: '/brand', icon: <img src={category} alt="brand" width={24} height={24} /> },
     { label: 'Category', path: '/category', icon: <TbAlpha size={24} /> },
     {
-        label: 'Request Approval',
+        label: 'User Approvals',
         path: '/request-approval',
         icon: <RiVerifiedBadgeFill className="text-gray-400" size={24} />,
     },
@@ -39,6 +39,7 @@ const settings = [
         children: [
             { label: 'Profile', path: '/profile', icon: <CiUser size={24} /> },
             { label: 'Change Password', path: '/change-password', icon: <CiLock size={24} /> },
+            { label: 'Marketplace Fees', path: '/marketplace-fees', icon: <IoPricetagOutline size={24} /> },
             { label: 'About Us', path: '/about-us', icon: <img src={about} width={24} height={24} alt="about" /> },
 
             {
